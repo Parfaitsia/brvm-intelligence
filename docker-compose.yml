@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: brvm_postgres
+    environment:
+      POSTGRES_DB: brvm_db
+      POSTGRES_USER: brvm_user
+      POSTGRES_PASSWORD: brvm_pass_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: brvm_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

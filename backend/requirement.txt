@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+redis
+celery
+playwright
+beautifulsoup4
+pandas
+requests
+python-dotenv
+groq
+ta
+alembic
+pydantic

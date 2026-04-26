@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> SIA BRVM </title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen font-sans">
+
+  <!-- HEADER -->
+  <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div>
+      <h1 class="text-xl font-bold text-blue-400"> BRVM Conseils</h1>
+      <p class="text-xs text-gray-400">Assistant de trading sur la BRVM</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="date-badge" class="bg-blue-900 text-blue-200 text-xs px-3 py-1 rounded-full"></span>
+      <span id="sentiment-badge" class="text-xs px-3 py-1 rounded-full font-bold"></span>
+      <button onclick="rafraichir()"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-1.5 rounded-lg transition">
+        🔄 Actualiser
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION -->
+  <nav class="bg-gray-900 border-b border-gray-800 px-6 flex gap-1">
+    <button onclick="afficherPage('dashboard')" id="nav-dashboard"
+      class="nav-btn px-4 py-3 text-sm border-b-2 border-blue-500 text-blue-400">
+      📊 Dashboard
+    </button>
+    <button onclick="afficherPage('actions')" id="nav-actions"
+      class="nav-btn px-4 py-3 text-sm border-b-2 border-transparent text-gray-400 hover:text-white">
+      📋 Toutes les actions
+    </button>
+    <button onclick="afficherPage('chat')" id="nav-chat"
+      class="nav-btn px-4 py-3 text-sm border-b-2 border-transparent text-gray-400 hover:text-white">
+      🤖 Assistant IA
+    </button>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- ════════ PAGE DASHBOARD ════════ -->
+    <div id="page-dashboard" class="space-y-8">
+
+      <!-- STATS -->
+      <section>
+        <h2 class="text-lg font-semibold mb-4 text-gray-200">📊 Marché aujourd'hui</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-container">
+          <div class="bg-gray-800 rounded-xl p-4 animate-pulse h-20"></div>
+          <div class="bg-gray-800 rounded-xl p-4 animate-pulse h-20"></div>
+          <div class="bg-gray-800 rounded-xl p-4 animate-pulse h-20"></div>
+          <div class="bg-gray-800 rounded-xl p-4 animate-pulse h-20"></div>
+        </div>
+      </section>
+
+      <!-- RÉSUMÉ IA -->
+      <section>
+        <h2 class="text-lg font-semibold mb-3 text-gray-200">🧠 Analyse IA du marché</h2>
+        <div id="resume-container"
+          class="bg-gray-900 border border-gray-700 rounded-xl p-5 text-gray-300 text-sm leading-relaxed">
+          <div class="animate-pulse h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+          <div class="animate-pulse h-4 bg-gray-700 rounded w-full mb-2"></div>
+          <div class="animate-pulse h-4 bg-gray-700 rounded w-2/3"></div>
+        </div>
+      </section>
+
+      <!-- RECOMMANDATIONS -->
+      <section>
+        <h2 class="text-lg font-semibold mb-4 text-gray-200">🤖 Recommandations du jour</h2>
+
+        <div class="mb-6">
+          <h3 class="text-green-400 font-semibold mb-3 flex items-center gap-2">
+            ✅ À acheter
+            <span id="count-buy" class="bg-green-900 text-green-300 text-xs px-2 py-0.5 rounded-full">0</span>
+          </h3>
+          <div id="buy-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <p class="text-gray-500 text-sm">Chargement...</p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-yellow-400 font-semibold mb-3 flex items-center gap-2">
+            ⏸️ À conserver
+            <span id="count-hold" class="bg-yellow-900 text-yellow-300 text-xs px-2 py-0.5 rounded-full">0</span>
+          </h3>
+          <div id="hold-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <p class="text-gray-500 text-sm">Chargement...</p>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-red-400 font-semibold mb-3 flex items-center gap-2">
+            🔴 À vendre / éviter
+            <span id="count-sell" class="bg-red-900 text-red-300 text-xs px-2 py-0.5 rounded-full">0</span>
+          </h3>
+          <div id="sell-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <p class="text-gray-500 text-sm">Chargement...</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ════════ PAGE ACTIONS ════════ -->
+    <div id="page-actions" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-200">📋 Toutes les actions BRVM</h2>
+        <input id="search-input" onkeyup="filtrerActions()" placeholder="🔍 Rechercher un ticker..."
+          class="bg-gray-800 border border-gray-700 text-white text-sm px-4 py-2 rounded-lg w-48 focus:outline-none focus:border-blue-500">
+      </div>
+
+      <div class="bg-gray-900 rounded-xl overflow-hidden border border-gray-800">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-800 text-gray-400 text-xs uppercase">
+            <tr>
+              <th class="px-4 py-3 text-left">Ticker</th>
+              <th class="px-4 py-3 text-right">Cours (XOF)</th>
+              <th class="px-4 py-3 text-right">Variation</th>
+              <th class="px-4 py-3 text-right">Volume</th>
+              <th class="px-4 py-3 text-center">Signal</th>
+              <th class="px-4 py-3 text-center">Détail</th>
+            </tr>
+          </thead>
+          <tbody id="cours-tbody" class="divide-y divide-gray-800"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════ PAGE CHAT ════════ -->
+    <div id="page-chat" class="hidden">
+      <div class="max-w-2xl mx-auto space-y-4">
+        <div class="text-center mb-6">
+          <h2 class="text-lg font-semibold text-gray-200">🤖 Assistant IA — BRVM</h2>
+          <p class="text-sm text-gray-400 mt-1">
+            Posez vos questions sur la BRVM, les actions, ou l'investissement en général
+          </p>
+        </div>
+
+        <!-- Messages -->
+        <div id="chat-messages" class="space-y-4 min-h-64 max-h-96 overflow-y-auto">
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+            <div class="bg-gray-800 rounded-xl rounded-tl-none px-4 py-3 text-sm text-gray-300 max-w-lg">
+              Bonjour ! Je suis votre assistant BRVM. Posez-moi vos questions sur les actions, 
+              la bourse ou l'investissement. Je répondrai en langage simple 😊
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="flex gap-3 mt-4">
+          <input id="chat-input"
+            placeholder="Ex: C'est quoi le PER ? Pourquoi ETIT est en HOLD ?"
+            class="flex-1 bg-gray-800 border border-gray-700 text-white text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500"
+            onkeypress="if(event.key==='Enter') envoyerQuestion()">
+          <button onclick="envoyerQuestion()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl transition font-medium text-sm">
+            Envoyer
+          </button>
+        </div>
+
+        <!-- Questions suggérées -->
+        <div class="flex flex-wrap gap-2 mt-2">
+          <span class="text-xs text-gray-500">Questions rapides :</span>
+          <button onclick="poserQuestion('Comment fonctionne la BRVM ?')"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-full transition">
+            Comment fonctionne la BRVM ?
+          </button>
+          <button onclick="poserQuestion('Comment investir avec 100 000 XOF ?')"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-full transition">
+            Investir avec 100 000 XOF ?
+          </button>
+          <button onclick="poserQuestion('C\'est quoi un dividende ?')"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-full transition">
+            C'est quoi un dividende ?
+          </button>
+          <button onclick="poserQuestion('Quels sont les risques de la BRVM ?')"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-full transition">
+            Risques de la BRVM ?
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-600 text-center">
+          ⚠️ Cet assistant est pédagogique uniquement — pas un conseiller financier officiel
+        </p>
+      </div>
+    </div>
+
+    <!-- MODAL DÉTAIL ACTION -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+      onclick="fermerModal(event)">
+      <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-lg w-full p-6 space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 id="modal-ticker" class="text-2xl font-bold"></h3>
+            <p id="modal-signal-txt" class="text-sm mt-1"></p>
+          </div>
+          <button onclick="fermerModal()" class="text-gray-500 hover:text-white text-xl">✕</button>
+        </div>
+        <div id="modal-prix" class="text-3xl font-bold text-blue-400"></div>
+        <div class="w-full">
+          <canvas id="modal-chart" height="120"></canvas>
+        </div>
+        <div id="modal-explication" class="bg-gray-800 rounded-xl p-4 text-sm text-gray-300 leading-relaxed"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-800 rounded-lg p-3 text-center">
+            <div id="modal-confiance" class="text-xl font-bold text-blue-400"></div>
+            <div class="text-xs text-gray-400">Confiance</div>
+          </div>
+          <div class="bg-gray-800 rounded-lg p-3 text-center">
+            <div id="modal-score" class="text-xl font-bold text-purple-400"></div>
+            <div class="text-xs text-gray-400">Score</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVERTISSEMENT -->
+    <div class="mt-8 bg-yellow-900/20 border border-yellow-700/40 rounded-xl p-4 text-yellow-200 text-xs">
+      ⚠️ <strong>Avertissement :</strong> BRVM Intelligence est un outil d'aide à la décision,
+      pas un conseiller financier agréé. Consultez toujours un professionnel avant d'investir.
+    </div>
+
+  </main>
+
+  <script>
+    const API = "http://localhost:8000";
+    let donneesActions = [];
+    let donneesRecs    = [];
+    let chartModal     = null;
+
+    const SIGNAL_CFG = {
+      BUY:  { bg: "bg-green-900/40",  border: "border-green-600",  badge: "bg-green-600",  label: "ACHETER" },
+      HOLD: { bg: "bg-yellow-900/30", border: "border-yellow-600", badge: "bg-yellow-600", label: "CONSERVER" },
+      SELL: { bg: "bg-red-900/30",    border: "border-red-600",    badge: "bg-red-600",    label: "VENDRE" },
+    };
+
+    // ── Navigation ──────────────────────────────────────
+    function afficherPage(page) {
+      ["dashboard","actions","chat"].forEach(p => {
+        document.getElementById(`page-${p}`).classList.toggle("hidden", p !== page);
+        const btn = document.getElementById(`nav-${p}`);
+        btn.classList.toggle("border-blue-500", p === page);
+        btn.classList.toggle("text-blue-400",   p === page);
+        btn.classList.toggle("border-transparent", p !== page);
+        btn.classList.toggle("text-gray-400",   p !== page);
+      });
+    }
+
+    // ── Carte recommandation ─────────────────────────────
+    function carteRec(r) {
+      const cfg = SIGNAL_CFG[r.signal] || SIGNAL_CFG.HOLD;
+      return `
+        <div class="${cfg.bg} border ${cfg.border} rounded-xl p-4 space-y-3 cursor-pointer hover:opacity-90 transition"
+          onclick="ouvrirModal('${r.ticker}')">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-lg">${r.ticker}</span>
+            <span class="${cfg.badge} text-white text-xs font-bold px-2 py-1 rounded-full">${cfg.label}</span>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Confiance</span><span>${r.confiance}%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-1.5">
+              <div class="h-1.5 rounded-full bg-blue-400 transition-all" style="width:${r.confiance}%"></div>
+            </div>
+          </div>
+          <p class="text-xs text-gray-300 leading-relaxed line-clamp-3">${r.explication}</p>
+          <div class="text-xs text-gray-500">Score : ${r.score}/100</div>
+        </div>`;
+    }
+
+    // ── Variation colorée ────────────────────────────────
+    function badgeVar(v) {
+      if (!v) return '<span class="text-gray-500">—</span>';
+      const pos = v.includes("+") || (!v.includes("-") && parseFloat(v) > 0);
+      return `<span class="${pos ? "text-green-400" : "text-red-400"} font-medium">${v}</span>`;
+    }
+
+    function badgeSig(signal) {
+      const cfg = SIGNAL_CFG[signal] || SIGNAL_CFG.HOLD;
+      return `<span class="${cfg.badge} text-white text-xs px-2 py-0.5 rounded-full">${signal}</span>`;
+    }
+
+    // ── Chargement stats ─────────────────────────────────
+    async function chargerStats() {
+      const data = await fetch(`${API}/api/stats`).then(r => r.json());
+      document.getElementById("date-badge").textContent = data.date;
+      const sb = document.getElementById("sentiment-badge");
+      sb.textContent = data.sentiment;
+      sb.className = `text-xs px-3 py-1 rounded-full font-bold ${
+        data.sentiment === "HAUSSIER" ? "bg-green-900 text-green-300" :
+        data.sentiment === "BAISSIER" ? "bg-red-900 text-red-300" :
+        "bg-yellow-900 text-yellow-300"}`;
+      document.getElementById("stats-container").innerHTML = `
+        <div class="bg-gray-800 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-blue-400">${data.nb_actions}</div>
+          <div class="text-xs text-gray-400 mt-1">Actions suivies</div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-green-400">${data.nb_buy}</div>
+          <div class="text-xs text-gray-400 mt-1">Signaux ACHAT</div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-red-400">${data.nb_sell}</div>
+          <div class="text-xs text-gray-400 mt-1">Signaux VENTE</div>
+        </div>
+        <div class="bg-gray-800 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold ${
+            data.sentiment==="HAUSSIER"?"text-green-400":
+            data.sentiment==="BAISSIER"?"text-red-400":"text-yellow-400"
+          }">${data.sentiment}</div>
+          <div class="text-xs text-gray-400 mt-1">Sentiment global</div>
+        </div>`;
+    }
+
+    // ── Résumé IA ────────────────────────────────────────
+    async function chargerResume() {
+      try {
+        const data = await fetch(`${API}/api/resume`).then(r => r.json());
+        document.getElementById("resume-container").innerHTML =
+          `<p class="text-sm text-gray-300 leading-relaxed">💬 ${data.resume}</p>`;
+      } catch(e) {
+        document.getElementById("resume-container").innerHTML =
+          `<p class="text-gray-500 text-sm">Résumé non disponible.</p>`;
+      }
+    }
+
+    // ── Recommandations ──────────────────────────────────
+    async function chargerRecommandations() {
+      const data = await fetch(`${API}/api/recommandations/top`).then(r => r.json());
+      donneesRecs = [...(data.buy||[]), ...(data.hold||[]), ...(data.sell||[])];
+
+      document.getElementById("count-buy").textContent  = data.buy?.length  || 0;
+      document.getElementById("count-hold").textContent = data.hold?.length || 0;
+      document.getElementById("count-sell").textContent = data.sell?.length || 0;
+
+      const render = (items, id, msg) => {
+        document.getElementById(id).innerHTML = items?.length
+          ? items.map(carteRec).join("")
+          : `<p class="text-gray-500 text-sm col-span-3">${msg}</p>`;
+      };
+      render(data.buy,  "buy-container",  "Aucun signal d'achat aujourd'hui.");
+      render(data.hold, "hold-container", "Aucun signal de conservation.");
+      render(data.sell, "sell-container", "Aucun signal de vente.");
+    }
+
+    // ── Tableau actions ──────────────────────────────────
+    async function chargerActions() {
+      const [cours, recs] = await Promise.all([
+        fetch(`${API}/api/cours`).then(r => r.json()),
+        fetch(`${API}/api/recommandations`).then(r => r.json()),
+      ]);
+      donneesActions = cours;
+      const sigMap = {};
+      recs.forEach(r => sigMap[r.ticker] = r.signal);
+
+      const tbody = document.getElementById("cours-tbody");
+      tbody.innerHTML = cours.map(c => `
+        <tr class="hover:bg-gray-800/50 transition">
+          <td class="px-4 py-3 font-medium">${c.ticker}</td>
+          <td class="px-4 py-3 text-right font-mono">${(c.cloture||0).toLocaleString("fr-FR")} XOF</td>
+          <td class="px-4 py-3 text-right">${badgeVar(c.variation)}</td>
+          <td class="px-4 py-3 text-right text-gray-400">${(c.volume||0).toLocaleString("fr-FR")}</td>
+          <td class="px-4 py-3 text-center">${badgeSig(sigMap[c.ticker]||"HOLD")}</td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="ouvrirModal('${c.ticker}')"
+              class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition">
+              Voir
+            </button>
+          </td>
+        </tr>`).join("");
+    }
+
+    function filtrerActions() {
+      const q = document.getElementById("search-input").value.toUpperCase();
+      document.querySelectorAll("#cours-tbody tr").forEach(tr => {
+        tr.style.display = tr.cells[0]?.textContent.includes(q) ? "" : "none";
+      });
+    }
+
+    // ── Modal détail action ──────────────────────────────
+    async function ouvrirModal(ticker) {
+      document.getElementById("modal").classList.remove("hidden");
+      document.getElementById("modal-ticker").textContent = ticker;
+      document.getElementById("modal-prix").textContent = "Chargement...";
+      document.getElementById("modal-explication").textContent = "Chargement...";
+
+      try {
+        const data = await fetch(`${API}/api/action/${ticker}`).then(r => r.json());
+        const rec  = data.recommandation;
+        const hist = data.historique.reverse();
+        const cfg  = SIGNAL_CFG[rec?.signal] || SIGNAL_CFG.HOLD;
+
+        const dernierPrix = hist[hist.length-1]?.cloture || 0;
+        document.getElementById("modal-prix").textContent =
+          `${dernierPrix.toLocaleString("fr-FR")} XOF`;
+        document.getElementById("modal-signal-txt").innerHTML =
+          `<span class="${cfg.badge} text-white text-xs px-2 py-1 rounded-full">
+            ${cfg.label}
+          </span>`;
+        document.getElementById("modal-explication").textContent =
+          rec?.explication || "Pas de recommandation disponible.";
+        document.getElementById("modal-confiance").textContent =
+          rec ? `${rec.confiance}%` : "—";
+        document.getElementById("modal-score").textContent =
+          rec ? `${rec.score}/100` : "—";
+
+        // Graphique
+        if (chartModal) chartModal.destroy();
+        const ctx = document.getElementById("modal-chart").getContext("2d");
+        chartModal = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: hist.map(h => h.date),
+            datasets: [{
+              label: ticker,
+              data: hist.map(h => h.cloture),
+              borderColor: "#60a5fa",
+              backgroundColor: "rgba(96,165,250,0.1)",
+              borderWidth: 2,
+              pointRadius: 3,
+              fill: true,
+              tension: 0.3,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: "#9ca3af", maxTicksLimit: 5 }, grid: { color: "#374151" } },
+              y: { ticks: { color: "#9ca3af" }, grid: { color: "#374151" } }
+            }
+          }
+        });
+      } catch(e) {
+        document.getElementById("modal-explication").textContent = "Erreur de chargement.";
+      }
+    }
+
+    function fermerModal(e) {
+      if (!e || e.target === document.getElementById("modal")) {
+        document.getElementById("modal").classList.add("hidden");
+      }
+    }
+
+    // ── Chat IA ──────────────────────────────────────────
+    async function envoyerQuestion() {
+      const input = document.getElementById("chat-input");
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = "";
+      poserQuestion(q);
+    }
+
+    async function poserQuestion(question) {
+      const msgs = document.getElementById("chat-messages");
+
+      // Message utilisateur
+      msgs.innerHTML += `
+        <div class="flex gap-3 justify-end">
+          <div class="bg-blue-700 rounded-xl rounded-tr-none px-4 py-3 text-sm text-white max-w-lg">
+            ${question}
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm flex-shrink-0">👤</div>
+        </div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      // Indicateur de frappe
+      const typingId = `typing-${Date.now()}`;
+      msgs.innerHTML += `
+        <div id="${typingId}" class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+          <div class="bg-gray-800 rounded-xl rounded-tl-none px-4 py-3 text-sm text-gray-400">
+            ⏳ Réflexion en cours...
+          </div>
+        </div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      try {
+        const data = await fetch(`${API}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        }).then(r => r.json());
+
+        document.getElementById(typingId).remove();
+        msgs.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm flex-shrink-0">🤖</div>
+            <div class="bg-gray-800 rounded-xl rounded-tl-none px-4 py-3 text-sm text-gray-300 max-w-lg leading-relaxed">
+              ${data.reponse}
+            </div>
+          </div>`;
+      } catch(e) {
+        document.getElementById(typingId).remove();
+        msgs.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm">🤖</div>
+            <div class="bg-red-900/30 border border-red-700 rounded-xl px-4 py-3 text-sm text-red-300 max-w-lg">
+              ❌ Erreur de connexion à l'API. Vérifie que le serveur tourne.
+            </div>
+          </div>`;
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    // ── Rafraîchir tout ──────────────────────────────────
+    async function rafraichir() {
+      try {
+        await fetch(`${API}/api/refresh`, { method: "POST" });
+      } catch(e) {}
+      charger();
+    }
+
+    async function charger() {
+      await Promise.all([
+        chargerStats(),
+        chargerResume(),
+        chargerRecommandations(),
+        chargerActions(),
+      ]);
+    }
+
+    charger();
+    setInterval(charger, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
