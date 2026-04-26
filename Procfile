@@ -1,1 +1,1 @@
-web: cd backend && pip install -r requirements.txt && playwright install chromium && uvicorn app.api.routes:app --host 0.0.0.0 --port $PORT
+web: cd backend && python3 -m uvicorn app.api.routes:app --host 0.0.0.0 --port $PORT
