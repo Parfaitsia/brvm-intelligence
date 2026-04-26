@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Dépendances système pour playwright et psycopg2
+# Dépendances système
 RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
@@ -20,5 +20,5 @@ RUN playwright install-deps chromium
 # Copie le code
 COPY app/ ./app/
 
-# Lance l'API
-CMD ["uvicorn", "app.api.routes:app", "--host", "0.0.0.0", "--port", "8080"]
+# Lance l'API depuis /app directement
+CMD ["python", "-m", "uvicorn", "app.api.routes:app", "--host", "0.0.0.0", "--port", "8080"]
