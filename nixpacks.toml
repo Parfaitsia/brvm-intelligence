@@ -5,8 +5,7 @@ nixPkgs = ["python311"]
 
 [phases.install]
 cmds = [
-  "python3.11 -m ensurepip",
-  "python3.11 -m pip install -r requirements.txt",
+  "python3.11 -m pip install --break-system-packages -r requirements.txt",
   "python3.11 -m playwright install chromium"
 ]
 
